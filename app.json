@@ -1,18 +1,28 @@
 {
   "expo": {
-    "name": "ANDROID",
-    "slug": "ANDROID",
+    "name": "ZYapp",
+    "slug": "zyapp",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/Firefly.png",
-    "scheme": "android",
+    "scheme": "zyapp",
+    "extra": {
+  "googleClientId": "1012302664400-6073m4mgphm1jtv0u10fc4sfff08ejoc.apps.googleusercontent.com",
+  "googleWebClientId": "1012302664400-6073m4mgphm1jtv0u10fc4sfff08ejoc.apps.googleusercontent.com",
+  "googleAndroidClientId": "1012302664400-ncmdep47qdvvh7eg8vrge88ak0qbcr79.apps.googleusercontent.com",
+  "apiUrl": "http://192.168.88.9:8000/api/v1/auth",
+      "router": {},
+      "eas": {
+        "projectId": "90830fdd-3c15-46f6-93da-1fe87cfd01e2"
+      }
+    },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "package": "com.anish.myloginapp",
+      "package": "com.zyapp",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,17 +47,13 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "90830fdd-3c15-46f6-93da-1fe87cfd01e2"
-      }
     }
   }
 }

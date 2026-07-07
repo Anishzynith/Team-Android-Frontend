@@ -11,10 +11,17 @@ import {
   FlatList,
   Platform,
   Pressable,
+  ScrollView,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../../service/auth";
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+
+// Define types for picker items
+interface PickerItem {
+  label: string;
+  value: string;
+}
 
 export default function EditProfileScreen() {
   const { user, updateProfile } = useAuth();
@@ -49,26 +56,42 @@ export default function EditProfileScreen() {
   const [phoneNumber, setPhoneNumber] = useState(
     user?.phone_number || user?.profile?.phone_number || ""
   );
+  const [unitSystem, setUnitSystem] = useState(
+    user?.profile?.unit_system || "metric"
+  );
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [showBloodModal, setShowBloodModal] = useState(false);
+  const [showUnitModal, setShowUnitModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const GENDERS = ["Male", "Female", "Other", "Prefer not to say"];
-  const BLOOD_GROUPS = ["A+","A-","B+","B-","O+","O-","AB+","AB-"];
+  const GENDERS: PickerItem[] = [
+    { label: "Male", value: "male" },
+    { label: "Female", value: "female" },
+    { label: "Other", value: "other" },
+    { label: "Prefer not to say", value: "prefer_not" },
+  ];
+
+  const BLOOD_GROUPS: PickerItem[] = [
+    { label: "A+", value: "A+" },
+    { label: "A-", value: "A-" },
+    { label: "B+", value: "B+" },
+    { label: "B-", value: "B-" },
+    { label: "O+", value: "O+" },
+    { label: "O-", value: "O-" },
+    { label: "AB+", value: "AB+" },
+    { label: "AB-", value: "AB-" },
+  ];
+
+  const UNIT_SYSTEMS: PickerItem[] = [
+    { label: "Metric (kg, cm)", value: "metric" },
+    { label: "Imperial (lbs, ft)", value: "imperial" },
+  ];
 
   const handleUpdate = async () => {
-    if (
-      !firstName ||
-      !lastName ||
-      !username
-    ) {
-      Alert.alert(
-        "Validation Error",
-        "All fields are required"
-      );
+    if (!firstName || !lastName || !username) {
+      Alert.alert("Validation Error", "All fields are required");
       return;
     }
 
@@ -85,62 +108,120 @@ export default function EditProfileScreen() {
         height_cm: heightCm ? Number(heightCm) : null,
         weight_kg: weightKg ? Number(weightKg) : null,
         phone_number: phoneNumber || null,
+        unit_system: unitSystem || null,
       });
 
-      Alert.alert(
-        "Success",
-        "Profile updated successfully"
-      );
-
+      Alert.alert("Success", "Profile updated successfully");
       router.back();
     } catch (error: any) {
       console.log(error);
-
       Alert.alert(
         "Update Failed",
-        error?.response?.data?.message ||
-          "Something went wrong"
+        error?.response?.data?.message || "Something went wrong"
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // Generic modal picker component
+  const ModalPicker = ({
+    visible,
+    onClose,
+    data,
+    selectedValue,
+    onSelect,
+    title,
+  }: {
+    visible: boolean;
+    onClose: () => void;
+    data: PickerItem[];
+    selectedValue: string;
+    onSelect: (value: string) => void;
+    title: string;
+  }) => {
+    return (
+      <Modal visible={visible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{title}</Text>
+            <FlatList
+              data={data}
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => {
+                const isSelected = selectedValue === item.value;
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+                    onPress={() => {
+                      onSelect(item.value);
+                      onClose();
+                    }}
+                  >
+                    <Text style={[styles.modalItemText, isSelected && styles.modalItemTextSelected]}>
+                      {item.label}
+                    </Text>
+                    {isSelected && (
+                      <Text style={styles.checkmark}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+            <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+              <Text style={styles.modalCloseText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Edit Profile
-      </Text>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <Text style={styles.title}>Edit Profile</Text>
+
+      {/* Personal Information Section */}
+      <Text style={styles.sectionTitle}>Personal Information</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="First Name"
+        placeholder="First Name *"
         value={firstName}
         onChangeText={setFirstName}
       />
 
       <TextInput
         style={styles.input}
-        placeholder="Last Name"
+        placeholder="Last Name *"
         value={lastName}
         onChangeText={setLastName}
       />
 
       <TextInput
         style={styles.input}
-        placeholder="Username"
+        placeholder="Username *"
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
       />
 
+      <TextInput
+        style={styles.input}
+        placeholder="Phone Number"
+        value={phoneNumber}
+        onChangeText={setPhoneNumber}
+        keyboardType="phone-pad"
+      />
+
+      {/* Date of Birth */}
       <Pressable onPress={() => {
         if (Platform.OS === 'android') {
           const current = dateOfBirth ? new Date(dateOfBirth) : new Date();
           DateTimePickerAndroid.open({
             value: current,
             onChange: (event, selectedDate) => {
-              if (!selectedDate) return; // dismissed
+              if (!selectedDate) return;
               const yyyy = selectedDate.getFullYear();
               const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
               const dd = String(selectedDate.getDate()).padStart(2, '0');
@@ -152,18 +233,21 @@ export default function EditProfileScreen() {
         }
         setShowDatePicker(true);
       }}>
-        <TextInput
-          style={styles.input}
-          placeholder="Date of Birth (YYYY-MM-DD)"
-          value={dateOfBirth}
-          editable={false}
-        />
+        <View pointerEvents="none">
+          <TextInput
+            style={[styles.input, styles.pressableInput]}
+            placeholder="Date of Birth"
+            value={dateOfBirth ? new Date(dateOfBirth).toLocaleDateString() : ""}
+            editable={false}
+          />
+        </View>
       </Pressable>
+
       {showDatePicker && Platform.OS !== 'android' && (
         <DateTimePicker
           value={dateOfBirth ? new Date(dateOfBirth) : new Date()}
           mode="date"
-          display={'spinner'}
+          display="spinner"
           onChange={(event, selectedDate) => {
             setShowDatePicker(Platform.OS === 'ios');
             if (selectedDate) {
@@ -176,77 +260,36 @@ export default function EditProfileScreen() {
         />
       )}
 
+      {/* Gender */}
       <Pressable onPress={() => setShowGenderModal(true)}>
-        <TextInput
-          style={styles.input}
-          placeholder="Gender"
-          value={gender}
-          editable={false}
-        />
+        <View pointerEvents="none">
+          <TextInput
+            style={[styles.input, styles.pressableInput]}
+            placeholder="Gender"
+            value={GENDERS.find(g => g.value === gender)?.label || ""}
+            editable={false}
+          />
+        </View>
       </Pressable>
 
-      <Modal visible={showGenderModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <FlatList
-              data={GENDERS}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setGender(item);
-                    setShowGenderModal(false);
-                  }}
-                >
-                  <Text>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity onPress={() => setShowGenderModal(false)} style={styles.modalClose}>
-              <Text style={{ color: '#007AFF' }}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
+      {/* Blood Group */}
       <Pressable onPress={() => setShowBloodModal(true)}>
-        <TextInput
-          style={styles.input}
-          placeholder="Blood Group"
-          value={bloodGroup}
-          editable={false}
-        />
+        <View pointerEvents="none">
+          <TextInput
+            style={[styles.input, styles.pressableInput]}
+            placeholder="Blood Group"
+            value={BLOOD_GROUPS.find(b => b.value === bloodGroup)?.label || ""}
+            editable={false}
+          />
+        </View>
       </Pressable>
 
-      <Modal visible={showBloodModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <FlatList
-              data={BLOOD_GROUPS}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setBloodGroup(item);
-                    setShowBloodModal(false);
-                  }}
-                >
-                  <Text>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity onPress={() => setShowBloodModal(false)} style={styles.modalClose}>
-              <Text style={{ color: '#007AFF' }}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Body Measurements Section */}
+      <Text style={styles.sectionTitle}>Body Measurements</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Height (cm)"
+        placeholder={`Height (${unitSystem === 'metric' ? 'cm' : 'ft/in'})`}
         value={heightCm}
         onChangeText={setHeightCm}
         keyboardType="numeric"
@@ -254,43 +297,73 @@ export default function EditProfileScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Phone Number"
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
-        keyboardType="phone-pad"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Weight (kg)"
+        placeholder={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`}
         value={weightKg}
         onChangeText={setWeightKg}
         keyboardType="numeric"
       />
 
+      {/* Unit System */}
+      <Text style={styles.subLabel}>Unit System</Text>
+      <Pressable onPress={() => setShowUnitModal(true)}>
+        <View pointerEvents="none">
+          <TextInput
+            style={[styles.input, styles.pressableInput]}
+            placeholder="Unit System"
+            value={UNIT_SYSTEMS.find(u => u.value === unitSystem)?.label || "Metric"}
+            editable={false}
+          />
+        </View>
+      </Pressable>
+
+      {/* Email (Read-only) */}
+      <Text style={styles.sectionTitle}>Account Information</Text>
       <TextInput
-        style={[
-          styles.input,
-          styles.disabledInput,
-        ]}
+        style={[styles.input, styles.disabledInput]}
         value={user?.email || ""}
         editable={false}
       />
 
+      {/* Modals */}
+      <ModalPicker
+        visible={showGenderModal}
+        onClose={() => setShowGenderModal(false)}
+        data={GENDERS}
+        selectedValue={gender}
+        onSelect={setGender}
+        title="Select Gender"
+      />
+
+      <ModalPicker
+        visible={showBloodModal}
+        onClose={() => setShowBloodModal(false)}
+        data={BLOOD_GROUPS}
+        selectedValue={bloodGroup}
+        onSelect={setBloodGroup}
+        title="Select Blood Group"
+      />
+
+      <ModalPicker
+        visible={showUnitModal}
+        onClose={() => setShowUnitModal(false)}
+        data={UNIT_SYSTEMS}
+        selectedValue={unitSystem}
+        onSelect={setUnitSystem}
+        title="Select Unit System"
+      />
+
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, loading && styles.buttonDisabled]}
         onPress={handleUpdate}
         disabled={loading}
       >
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>
-            Update Profile
-          </Text>
+          <Text style={styles.buttonText}>Update Profile</Text>
         )}
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -298,29 +371,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#F4F7FC",
   },
-
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 30,
+    marginBottom: 20,
+    marginTop: 10,
   },
-
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  subLabel: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 6,
+    marginLeft: 4,
+  },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
-    padding: 15,
-    marginBottom: 15,
+    padding: 14,
+    marginBottom: 12,
     borderRadius: 8,
     backgroundColor: "#fff",
+    fontSize: 16,
   },
-
+  pressableInput: {
+    backgroundColor: "#fafafa",
+  },
   disabledInput: {
     backgroundColor: "#f5f5f5",
     color: "#777",
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -328,29 +415,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    width: '80%',
-    maxHeight: '60%',
+    width: '85%',
+    maxHeight: '70%',
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 12,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: 'center',
+    marginBottom: 16,
   },
   modalItem: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
+  },
+  modalItemSelected: {
+    backgroundColor: '#e8f0fe',
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  modalItemTextSelected: {
+    color: '#007AFF',
+    fontWeight: '600',
   },
   modalClose: {
-    marginTop: 12,
-    alignSelf: 'center',
+    marginTop: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
-
+  modalCloseText: {
+    fontSize: 16,
+    color: '#ff4444',
+    fontWeight: '600',
+  },
+  checkmark: {
+    fontSize: 18,
+    color: '#007AFF',
+    fontWeight: 'bold',
+  },
   button: {
     backgroundColor: "#007AFF",
-    padding: 15,
+    padding: 16,
     borderRadius: 8,
     alignItems: "center",
+    marginTop: 10,
+    marginBottom: 30,
   },
-
+  buttonDisabled: {
+    opacity: 0.7,
+  },
   buttonText: {
     color: "#fff",
     fontWeight: "bold",

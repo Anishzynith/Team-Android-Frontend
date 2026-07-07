@@ -16,18 +16,33 @@ const API_BASE_URL = (() => {
     if (Constants.isDevice === false) {
       return "http://10.0.2.2:8000/api/v1/auth";
     }
-    return "http://192.168.88.10:8000/api/v1/auth";
+    return "http://192.168.88.9:8000/api/v1/auth";
   }
 
   if (Platform.OS === "web") {
     return "http://localhost:8000/api/v1/auth";
   }
 
-  return "http://192.168.88.10:8000/api/v1/auth";
+  return "http://192.168.88.9:8000/api/v1/auth";
 })();
 
 console.log("API_BASE_URL", API_BASE_URL);
 console.log("Platform.OS", Platform.OS, "isDevice", Constants.isDevice);
+
+export const API_ENDPOINTS = {
+  auth: {
+    login: '/login/',
+    signup: '/signup/',
+    forgotPassword: '/password-reset/',
+    resetPassword: '/password-reset/confirm/',
+    verifyOTP: '/verify-otp/',
+    logout: '/logout/',
+  },
+  user: {
+    profile: '/profile/',
+    updateProfile: '/profile/',
+  },
+};
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -153,6 +168,11 @@ export const authAPI = {
     last_name: string;
     password: string;
     password2: string;
+    phone_number?: string;
+    date_of_birth?: string;
+    gender?: string;
+    blood_group?: string;
+    unit_system?: string;
   }) =>
     api.post("/signup/", data),
 
@@ -176,6 +196,8 @@ export const authAPI = {
 
   googleLogin: (data: {
     id_token: string;
+    access_token?: string;
+    email?: string;
   }) =>
     api.post("/google-login/", data),
 
@@ -222,19 +244,6 @@ export const questionnaireAPI = {
   submitAnswers: (data: { answers: any[] }) =>
     api.post("/questionnaire/submit/", data),
 };
-export const API_ENDPOINTS = {
-  auth: {
-    login: '/login/',
-    signup: '/signup/',
-    logout: '/logout/',
-    refresh: '/refresh/',
-    forgotPassword: '/password-reset/',
-    resetPassword: '/password-reset/confirm/',
-    verifyOTP: '/verify-otp/',
-  },
-  user: {
-    profile: '/profile/',
-    updateProfile: '/profile/',
-  },
-};
+
 export default api;
+
