@@ -7,13 +7,13 @@
     "icon": "./assets/images/Firefly.png",
     "scheme": "zyapp",
     "extra": {
-  "googleClientId": "1012302664400-6073m4mgphm1jtv0u10fc4sfff08ejoc.apps.googleusercontent.com",
-  "googleWebClientId": "1012302664400-6073m4mgphm1jtv0u10fc4sfff08ejoc.apps.googleusercontent.com",
-  "googleAndroidClientId": "1012302664400-ncmdep47qdvvh7eg8vrge88ak0qbcr79.apps.googleusercontent.com",
-  "apiUrl": "http://192.168.88.9:8000/api/v1/auth",
+      "googleClientId": "1012302664400-6073m4mgphm1jtv0u10fc4sfff08ejoc.apps.googleusercontent.com",
+      "googleWebClientId": "1012302664400-6073m4mgphm1jtv0u10fc4sfff08ejoc.apps.googleusercontent.com",
+      "googleAndroidClientId": "1012302664400-ncmdep47qdvvh7eg8vrge88ak0qbcr79.apps.googleusercontent.com",
+      "apiUrl": "http://192.168.88.9:8000/api/v1/auth",
       "router": {},
       "eas": {
-        "projectId": "90830fdd-3c15-46f6-93da-1fe87cfd01e2"
+        "projectId": "7f97b582-744b-411f-a413-bb494ec4bb68"
       }
     },
     "userInterfaceStyle": "automatic",

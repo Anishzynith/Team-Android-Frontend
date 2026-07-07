@@ -1,34 +1,30 @@
-const { expo } = require("./app.json");
 require("dotenv").config();
 
-module.exports = () => {
-  return {
-    ...expo,
-    extra: {
-      ...expo.extra,
+module.exports = ({ config }) => ({
+  ...config,
 
-      // Web OAuth Client
-      googleClientId:
-        process.env.GOOGLE_OAUTH_WEB_CLIENT_ID ||
-        expo.extra.googleClientId,
+  extra: {
+    ...config.extra,
 
-      googleWebClientId:
-        process.env.GOOGLE_OAUTH_WEB_CLIENT_ID ||
-        expo.extra.googleWebClientId,
+    googleClientId:
+      process.env.GOOGLE_OAUTH_WEB_CLIENT_ID ||
+      config.extra?.googleClientId,
 
-      // Android OAuth Client
-      googleAndroidClientId:
-        process.env.GOOGLE_OAUTH_ANDROID_CLIENT_ID ||
-        process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
-        expo.extra.googleAndroidClientId,
+    googleWebClientId:
+      process.env.GOOGLE_OAUTH_WEB_CLIENT_ID ||
+      config.extra?.googleWebClientId,
 
-      googleClientSecret:
-        process.env.GOOGLE_OAUTH_SECRET ||
-        expo.extra.googleClientSecret,
+    googleAndroidClientId:
+      process.env.GOOGLE_OAUTH_ANDROID_CLIENT_ID ||
+      process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
+      config.extra?.googleAndroidClientId,
 
-      apiUrl:
-        process.env.API_URL ||
-        expo.extra.apiUrl,
-    },
-  };
-};
+    googleClientSecret:
+      process.env.GOOGLE_OAUTH_SECRET ||
+      config.extra?.googleClientSecret,
+
+    apiUrl:
+      process.env.API_URL ||
+      config.extra?.apiUrl,
+  },
+});
