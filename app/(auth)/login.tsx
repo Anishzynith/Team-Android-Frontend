@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
@@ -13,7 +12,10 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../service/auth';
+import { AppInput } from '../../components/common/AppInput';
+import { PrimaryButton } from '../../components/common/PrimaryButton';
 import GoogleLoginButton from '../../components/GoogleLoginButton';
+import { Colors, Spacing, Typography } from '../../constants/theme';
 
 export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
@@ -27,7 +29,6 @@ export default function LoginScreen() {
       Alert.alert('Error', 'Please fill all fields');
       return;
     }
-    
     setLoading(true);
     try {
       await login(identifier, password);
@@ -43,7 +44,6 @@ export default function LoginScreen() {
     try {
       setGoogleLoading(true);
       const result = await googleLogin();
-
       if (result?.requiresSignup) {
         router.push('/(auth)/signup');
       } else {
@@ -70,47 +70,42 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
+        <Text style={styles.subtitle}>Sign in to continue your journey</Text>
 
-        <TextInput
-          style={styles.input}
+        <AppInput
           placeholder="Email or Username"
           value={identifier}
           onChangeText={setIdentifier}
           autoCapitalize="none"
           autoCorrect={false}
+          containerStyle={styles.inputContainer}
         />
 
-        <TextInput
-          style={styles.input}
+        <AppInput
           placeholder="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          containerStyle={styles.inputContainer}
         />
 
         <TouchableOpacity
           style={styles.forgotPassword}
           onPress={() => router.push('/(auth)/forgot-password')}
         >
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          <Text style={styles.forgotPasswordText}>Forgot password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+        <PrimaryButton
+          title="Login"
           onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Login</Text>
-          )}
-        </TouchableOpacity>
+          loading={loading}
+          style={styles.loginButton}
+        />
 
         <View style={styles.dividerContainer}>
           <View style={styles.divider} />
-          <Text style={styles.dividerText}>OR</Text>
+          <Text style={styles.dividerText}>or</Text>
           <View style={styles.divider} />
         </View>
 
@@ -134,84 +129,67 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F7FC',
+    backgroundColor: Colors.background,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: Spacing.xl,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    ...Typography.h1,
+    color: Colors.text,
     textAlign: 'center',
-    marginBottom: 8,
-    color: '#1a1a1a',
+    marginBottom: Spacing.xs,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    ...Typography.body,
+    color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: Spacing.xl,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 15,
-    marginBottom: 15,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    fontSize: 16,
+  inputContainer: {
+    marginBottom: Spacing.md,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
   },
   forgotPasswordText: {
-    color: '#007AFF',
-    fontSize: 14,
+    color: Colors.primary,
+    ...Typography.bodySmall,
+    fontWeight: '500',
   },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+  loginButton: {
+    marginTop: Spacing.sm,
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: Spacing.lg,
   },
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#ddd',
+    backgroundColor: Colors.border,
   },
   dividerText: {
-    marginHorizontal: 16,
-    color: '#666',
-    fontSize: 14,
+    marginHorizontal: Spacing.md,
+    color: Colors.textMuted,
+    ...Typography.caption,
   },
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: Spacing.lg,
   },
   signupText: {
-    fontSize: 14,
-    color: '#666',
+    ...Typography.bodySmall,
+    color: Colors.textSecondary,
   },
   signupLink: {
-    fontSize: 14,
-    color: '#007AFF',
+    ...Typography.bodySmall,
+    color: Colors.primary,
     fontWeight: '600',
   },
 });

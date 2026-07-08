@@ -2,23 +2,21 @@ import { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   ScrollView,
-  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { authAPI } from "../../service/api";
 import { useAuth } from "../../service/auth";
-import { Picker } from "@react-native-picker/picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { AppInput } from "../../components/common/AppInput";
+import { PrimaryButton } from "../../components/common/PrimaryButton";
+import { Colors, Spacing, Typography, BorderRadius } from "../../constants/theme";
 
 export default function SignupScreen() {
   const { googleSignupData, setGoogleSignupData } = useAuth();
-  
+
   const hasGoogleData = googleSignupData !== null;
 
   const [firstName, setFirstName] = useState(
@@ -33,40 +31,8 @@ export default function SignupScreen() {
   );
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
-
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [gender, setGender] = useState("");
-  const [bloodGroup, setBloodGroup] = useState("");
-  const [unitSystem, setUnitSystem] = useState("metric");
-
   const [loading, setLoading] = useState(false);
-
-  const bloodGroups = [
-    { label: "Select Blood Group", value: "" },
-    { label: "A+", value: "A+" },
-    { label: "A-", value: "A-" },
-    { label: "B+", value: "B+" },
-    { label: "B-", value: "B-" },
-    { label: "AB+", value: "AB+" },
-    { label: "AB-", value: "AB-" },
-    { label: "O+", value: "O+" },
-    { label: "O-", value: "O-" },
-  ];
-
-  const genderOptions = [
-    { label: "Select Gender", value: "" },
-    { label: "Male", value: "male" },
-    { label: "Female", value: "female" },
-    { label: "Other", value: "other" },
-    { label: "Prefer not to say", value: "prefer_not" },
-  ];
-
-  const unitSystemOptions = [
-    { label: "Metric (kg, cm)", value: "metric" },
-    { label: "Imperial (lbs, ft)", value: "imperial" },
-  ];
 
   useEffect(() => {
     return () => {
@@ -77,29 +43,94 @@ export default function SignupScreen() {
   }, []);
 
   const handleSignup = async () => {
-    if (
-      !firstName ||
-      !lastName ||
-      !username ||
-      !email ||
-      !password ||
-      !password2 ||
-      !gender ||
-      !bloodGroup ||
-      !phoneNumber ||
-      !dateOfBirth
-    ) {
-      Alert.alert("Validation Error", "Please fill all required fields");
+    // First Name
+    if (!firstName.trim()) {
+      Alert.alert("Validation Error", "First Name is required.");
+      return;
+    }
+
+    // Last Name
+    if (!lastName.trim()) {
+      Alert.alert("Validation Error", "Last Name is required.");
+      return;
+    }
+
+    // Username
+    if (!username.trim()) {
+      Alert.alert("Validation Error", "Username is required.");
+      return;
+    }
+
+    // Email
+    if (!email.trim()) {
+      Alert.alert("Validation Error", "Email is required.");
+      return;
+    }
+
+    const emailRegex =
+      /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert("Validation Error", "Please enter a valid email.");
+      return;
+    }
+
+    // Phone Number
+    if (!phoneNumber.trim()) {
+      Alert.alert("Validation Error", "Phone Number is required.");
+      return;
+    }
+
+    const phoneRegex = /^[6-9]\d{9}$/;
+
+    if (!phoneRegex.test(phoneNumber.trim())) {
+      Alert.alert(
+        "Validation Error",
+        "Enter a valid 10-digit mobile number."
+      );
+      return;
+    }
+
+    // Password
+    if (!password) {
+      Alert.alert("Validation Error", "Password is required.");
+      return;
+    }
+
+    if (password.length < 8) {
+      Alert.alert(
+        "Validation Error",
+        "Password must contain at least 8 characters."
+      );
+      return;
+    }
+
+    // Strong Password
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      Alert.alert(
+        "Validation Error",
+        "Password must contain:\n\n• One uppercase letter\n• One lowercase letter\n• One number\n• One special character."
+      );
+      return;
+    }
+
+    // Confirm Password
+    if (!password2) {
+      Alert.alert(
+        "Validation Error",
+        "Confirm Password is required."
+      );
       return;
     }
 
     if (password !== password2) {
-      Alert.alert("Validation Error", "Passwords do not match");
-      return;
-    }
-
-    if (phoneNumber.length < 10) {
-      Alert.alert("Validation Error", "Please enter a valid phone number");
+      Alert.alert(
+        "Validation Error",
+        "Passwords do not match."
+      );
       return;
     }
 
@@ -111,25 +142,19 @@ export default function SignupScreen() {
       password,
       password2,
       phone_number: phoneNumber.trim(),
-      date_of_birth: dateOfBirth.toISOString().split("T")[0],
-      gender,
-      blood_group: bloodGroup,
-      unit_system: unitSystem,
     };
 
     try {
       setLoading(true);
+
       console.log("========== SIGNUP REQUEST ==========");
       console.log(signupData);
 
       const response = await authAPI.signup(signupData);
 
-      console.log("========== SIGNUP RESPONSE ==========");
-      console.log(response.data);
-
       Alert.alert(
         "Success",
-        response?.data?.message || "OTP sent to your email"
+        response.data.message || "OTP sent successfully."
       );
 
       router.push({
@@ -138,27 +163,23 @@ export default function SignupScreen() {
           email: signupData.email,
         },
       });
+
     } catch (error: any) {
       console.log("========== SIGNUP ERROR ==========");
       console.log(error);
 
       let errorMessage = "Something went wrong";
 
-      if (error?.response?.data) {
-        const data = error.response.data;
-        if (typeof data === "string") {
-          errorMessage = data;
-        } else if (data.message) {
-          errorMessage = data.message;
-        } else if (data.detail) {
-          errorMessage = data.detail;
-        } else if (data.errors) {
-          errorMessage = JSON.stringify(data.errors, null, 2);
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
         } else {
-          errorMessage = JSON.stringify(data, null, 2);
+          errorMessage = Object.values(error.response.data)
+            .flat()
+            .join("\n");
         }
-      } else if (error?.message) {
-        errorMessage = error.message;
       }
 
       Alert.alert("Signup Failed", errorMessage);
@@ -167,30 +188,14 @@ export default function SignupScreen() {
     }
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === "ios");
-    if (selectedDate) {
-      setDateOfBirth(selectedDate);
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Sign Up</Text>
+      <Text style={styles.title}>Create account</Text>
+      <Text style={styles.subtitle}>Join thousands of runners today</Text>
 
       {hasGoogleData && (
         <View style={styles.googleInfoContainer}>
-          <Text style={styles.googleInfoText}>
-            🔵 Signing up with Google
-          </Text>
+          <Text style={styles.googleInfoText}>🔵 Signing up with Google</Text>
           <Text style={styles.googleInfoSubtext}>
             Your email has been pre-filled from Google.
           </Text>
@@ -199,142 +204,80 @@ export default function SignupScreen() {
 
       <Text style={styles.sectionTitle}>Personal Information</Text>
 
-      <TextInput
-        placeholder="First Name *"
-        value={firstName}
-        onChangeText={setFirstName}
-        style={styles.input}
-      />
+      <View style={styles.row}>
+        <AppInput
+          placeholder="First Name *"
+          value={firstName}
+          onChangeText={setFirstName}
+          containerStyle={styles.halfInput}
+        />
+        <AppInput
+          placeholder="Last Name *"
+          value={lastName}
+          onChangeText={setLastName}
+          containerStyle={styles.halfInput}
+        />
+      </View>
 
-      <TextInput
-        placeholder="Last Name *"
-        value={lastName}
-        onChangeText={setLastName}
-        style={styles.input}
-      />
-
-      <TextInput
+      <AppInput
         placeholder="Username *"
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
-        style={styles.input}
+        containerStyle={styles.inputContainer}
       />
 
-      <TextInput
+      <AppInput
         placeholder="Email *"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         keyboardType="email-address"
-        style={[styles.input, hasGoogleData && styles.disabledInput]}
+        style={[
+          styles.inputContainer,
+          hasGoogleData && styles.disabledInputContainer,
+        ]}
         editable={!hasGoogleData}
       />
 
-      <TextInput
+      <AppInput
         placeholder="Phone Number *"
         value={phoneNumber}
-        onChangeText={setPhoneNumber}
-        keyboardType="phone-pad"
-        style={styles.input}
+        onChangeText={(text) => {
+          const value = text.replace(/[^0-9]/g, "");
+          if (value.length <= 10) {
+            setPhoneNumber(value);
+          }
+        }}
+        keyboardType="number-pad"
+        maxLength={10}
+        containerStyle={styles.inputContainer}
       />
-
-      <TouchableOpacity
-        style={styles.dateInput}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={dateOfBirth ? styles.dateText : styles.datePlaceholder}>
-          {dateOfBirth ? formatDate(dateOfBirth) : "Date of Birth *"}
-        </Text>
-      </TouchableOpacity>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={dateOfBirth || new Date()}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-          maximumDate={new Date()}
-        />
-      )}
-
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={gender}
-          onValueChange={(itemValue) => setGender(itemValue)}
-          style={styles.picker}
-        >
-          {genderOptions.map((option) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-            />
-          ))}
-        </Picker>
-      </View>
-
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={bloodGroup}
-          onValueChange={(itemValue) => setBloodGroup(itemValue)}
-          style={styles.picker}
-        >
-          {bloodGroups.map((option) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-            />
-          ))}
-        </Picker>
-      </View>
-
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={unitSystem}
-          onValueChange={(itemValue) => setUnitSystem(itemValue)}
-          style={styles.picker}
-        >
-          {unitSystemOptions.map((option) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-            />
-          ))}
-        </Picker>
-      </View>
 
       <Text style={styles.sectionTitle}>Password</Text>
 
-      <TextInput
+      <AppInput
         placeholder="Password *"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        style={styles.input}
+        containerStyle={styles.inputContainer}
       />
 
-      <TextInput
+      <AppInput
         placeholder="Confirm Password *"
         value={password2}
         onChangeText={setPassword2}
         secureTextEntry
-        style={styles.input}
+        containerStyle={styles.inputContainer}
       />
 
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
+      <PrimaryButton
+        title="Create Account"
         onPress={handleSignup}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Create Account</Text>
-        )}
-      </TouchableOpacity>
+        loading={loading}
+        style={styles.signupButton}
+      />
 
       <TouchableOpacity onPress={() => router.back()} disabled={loading}>
         <Text style={styles.link}>Already have an account? Login</Text>
@@ -346,100 +289,65 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#F4F7FC",
+    backgroundColor: Colors.background,
+    padding: Spacing.lg,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
+    ...Typography.h1,
+    color: Colors.text,
     textAlign: "center",
-    marginBottom: 20,
-    marginTop: 20,
+    marginTop: Spacing.lg,
+  },
+  subtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginTop: 16,
-    marginBottom: 12,
+    ...Typography.h4,
+    color: Colors.text,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 8,
-    backgroundColor: "#fff",
+  row: {
+    flexDirection: "row",
+    gap: Spacing.sm,
   },
-  disabledInput: {
-    backgroundColor: "#f0f0f0",
-    color: "#666",
+  halfInput: {
+    flex: 1,
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    marginBottom: 12,
-    overflow: "hidden",
+  inputContainer: {
+    marginBottom: Spacing.sm,
   },
-  picker: {
-    height: 50,
+  disabledInputContainer: {
+    opacity: 0.6,
   },
-  dateInput: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-  },
-  dateText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  datePlaceholder: {
-    fontSize: 16,
-    color: "#999",
-  },
-  button: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 16,
+  signupButton: {
+    marginTop: Spacing.md,
   },
   link: {
-    color: "#007AFF",
+    ...Typography.bodySmall,
+    color: Colors.primary,
     textAlign: "center",
-    marginTop: 20,
+    marginTop: Spacing.lg,
     marginBottom: 30,
   },
   googleInfoContainer: {
-    backgroundColor: "#e8f0fe",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    backgroundColor: Colors.surfaceLight,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
     borderLeftWidth: 4,
     borderLeftColor: "#4285F4",
   },
   googleInfoText: {
-    fontSize: 14,
+    ...Typography.bodySmall,
     fontWeight: "600",
-    color: "#1a1a1a",
-    marginBottom: 4,
+    color: Colors.text,
   },
   googleInfoSubtext: {
-    fontSize: 13,
-    color: "#666",
+    ...Typography.caption,
+    color: Colors.textSecondary,
   },
 });

@@ -9,6 +9,11 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../service/auth";
+import { GradientHeader } from "../../components/GradientHeader";
+import { AppCard } from "../../components/AppCard";
+import { StatCard } from "../../components/StatCard";
+import { PrimaryButton } from "../../components/common/PrimaryButton";
+import { BorderRadius, Colors, Spacing, Typography } from "../../constants/theme";
 
 export default function DashboardScreen() {
   const { user, logout } = useAuth();
@@ -38,245 +43,191 @@ export default function DashboardScreen() {
     user?.last_name || ""
   }`.trim();
 
+  // Example stats – replace with real HRMS data from your API
+  const stats = {
+    totalEmployees: 156,
+    presentToday: 132,
+    onLeave: 12,
+    pendingRequests: 8,
+  };
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: 30,
-      }}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>
-          Dashboard
-        </Text>
+    <View style={styles.container}>
+      <GradientHeader
+        title="Dashboard"
+        subtitle={`Welcome back, ${fullName || "User"}`}
+        rightIcon={
+          <TouchableOpacity onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        }
+      />
 
-        <TouchableOpacity
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutText}>
-            Logout
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.profileCard}>
-        <Text style={styles.profileName}>
-          {fullName || "User"}
-        </Text>
-
-        <Text style={styles.profileEmail}>
-          {user?.email}
-        </Text>
-
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() =>
-            router.push(
-              "/(app)/profile/edit"
-            )
-          }
-        >
-          <Text style={styles.editButtonText}>
-            Edit Profile
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.infoSection}>
-        <Text style={styles.sectionTitle}>
-          Account Information
-        </Text>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>
-            First Name
-          </Text>
-
-          <Text style={styles.infoValue}>
-            {user?.first_name || "N/A"}
-          </Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Stats Row */}
+        <View style={styles.statsRow}>
+          <StatCard
+            title="Total Employees"
+            value={stats.totalEmployees}
+            icon={<Text>👥</Text>}
+          />
+          <StatCard
+            title="Present Today"
+            value={stats.presentToday}
+            icon={<Text>✅</Text>}
+          />
+        </View>
+        <View style={styles.statsRow}>
+          <StatCard
+            title="On Leave"
+            value={stats.onLeave}
+            icon={<Text>🏖️</Text>}
+          />
+          <StatCard
+            title="Pending Requests"
+            value={stats.pendingRequests}
+            icon={<Text>📋</Text>}
+          />
         </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>
-            Last Name
-          </Text>
+        {/* Quick Actions */}
+        <AppCard variant="elevated" padding={Spacing.md} style={styles.quickActionsCard}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActions}>
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={() => router.push("/(app)/profile/edit")}
+            >
+              <View style={styles.actionIcon}>
+                <Text>👤</Text>
+              </View>
+              <Text style={styles.actionLabel}>Edit Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={() => {}}
+            >
+              <View style={styles.actionIcon}>
+                <Text>📋</Text>
+              </View>
+              <Text style={styles.actionLabel}>Apply Leave</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={() => {}}
+            >
+              <View style={styles.actionIcon}>
+                <Text>⏱️</Text>
+              </View>
+              <Text style={styles.actionLabel}>Timesheet</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={() => {}}
+            >
+              <View style={styles.actionIcon}>
+                <Text>💰</Text>
+              </View>
+              <Text style={styles.actionLabel}>Payroll</Text>
+            </TouchableOpacity>
+          </View>
+        </AppCard>
 
-          <Text style={styles.infoValue}>
-            {user?.last_name || "N/A"}
-          </Text>
+        {/* Recent Activity */}
+        <AppCard variant="elevated" padding={Spacing.md}>
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <View style={styles.activityItem}>
+            <Text style={styles.activityText}>John Doe applied for annual leave</Text>
+            <Text style={styles.activityTime}>2 hours ago</Text>
+          </View>
+          <View style={styles.activityItem}>
+            <Text style={styles.activityText}>Jane Smith checked in at 9:00 AM</Text>
+            <Text style={styles.activityTime}>4 hours ago</Text>
+          </View>
+          <View style={styles.activityItem}>
+            <Text style={styles.activityText}>Payroll for March processed</Text>
+            <Text style={styles.activityTime}>Yesterday</Text>
+          </View>
+        </AppCard>
+
+        <View style={styles.profileLink}>
+          <PrimaryButton
+            title="View Full Profile"
+            onPress={() => router.push("/(app)/profile")}
+            variant="outline"
+          />
         </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>
-            Username
-          </Text>
-
-          <Text style={styles.infoValue}>
-            {user?.username || "N/A"}
-          </Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>
-            Email
-          </Text>
-
-          <Text style={styles.infoValue}>
-            {user?.email || "N/A"}
-          </Text>
-        </View>
-        
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>
-              Gender
-            </Text>
-
-            <Text style={styles.infoValue}>
-              {user?.profile?.gender || "N/A"}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>
-              Blood Group
-            </Text>
-
-            <Text style={styles.infoValue}>
-              {user?.profile?.blood_group || "N/A"}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>
-              Phone
-            </Text>
-
-            <Text style={styles.infoValue}>
-              {user?.phone_number || user?.profile?.phone_number || "N/A"}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>
-              Date of Birth
-            </Text>
-
-            <Text style={styles.infoValue}>
-              {user?.profile?.date_of_birth || "N/A"}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>
-              Height
-            </Text>
-
-            <Text style={styles.infoValue}>
-              
-              {user?.profile?.height_cm ? `${user.profile.height_cm} cm` : "N/A"}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>
-              Weight
-            </Text>
-
-            <Text style={styles.infoValue}>
-              {user?.profile?.weight_kg ? `${user.profile.weight_kg} kg` : "N/A"}
-            </Text>
-          </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: Colors.background,
   },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
+  scrollContent: {
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
-
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-  },
-
   logoutText: {
-    color: "#FF3B30",
-    fontWeight: "600",
-    fontSize: 16,
+    color: Colors.primary,
+    ...Typography.button,
+    fontSize: 14,
   },
-
-  profileCard: {
-    backgroundColor: "#fff",
-    margin: 20,
-    padding: 25,
-    borderRadius: 12,
-    alignItems: "center",
-    elevation: 2,
-  },
-
-  profileName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 6,
-  },
-
-  profileEmail: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 20,
-  },
-
-  editButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-
-  editButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-
-  infoSection: {
-    backgroundColor: "#fff",
-    marginHorizontal: 20,
-    padding: 20,
-    borderRadius: 12,
-    elevation: 2,
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-
-  infoRow: {
+  statsRow: {
     flexDirection: "row",
-    marginBottom: 14,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
-
-  infoLabel: {
-    width: 100,
-    fontWeight: "bold",
-    color: "#333",
+  quickActionsCard: {
+    marginBottom: Spacing.md,
   },
-
-  infoValue: {
-    flex: 1,
-    color: "#666",
+  sectionTitle: {
+    ...Typography.h4,
+    color: Colors.text,
+    marginBottom: Spacing.md,
+  },
+  quickActions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  actionItem: {
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.surfaceLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionLabel: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+  },
+  activityItem: {
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  activityText: {
+    ...Typography.bodySmall,
+    color: Colors.text,
+  },
+  activityTime: {
+    ...Typography.caption,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  profileLink: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xl,
   },
 });

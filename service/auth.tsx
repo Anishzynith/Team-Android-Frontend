@@ -24,6 +24,8 @@ interface User {
     weight_kg?: number | null;
     phone_number?: string;
     unit_system?: string;
+    profile_picture?: string;
+  avatar?: string; // for Google
   };
 }
 
