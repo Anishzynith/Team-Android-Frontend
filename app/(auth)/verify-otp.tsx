@@ -1,7 +1,20 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../service/auth';
+import { AppInput } from '../../components/common/AppInput';
+import { PrimaryButton } from '../../components/common/PrimaryButton';
+import { Colors, Spacing, Typography } from '../../constants/theme';
 
 export default function VerifyOTPScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -15,18 +28,15 @@ export default function VerifyOTPScreen() {
       Alert.alert('Error', 'Please enter a valid OTP');
       return;
     }
-    
     setLoading(true);
     try {
       await verifyOtp(email as string, otp);
-      
-      // ✅ Navigate to questionnaire after successful OTP verification
       Alert.alert(
-        'Success', 
+        'Success',
         'OTP verified successfully!',
         [
-          { 
-            text: 'Continue', 
+          {
+            text: 'Continue',
             onPress: () => {
               console.log('Navigating to questionnaire...');
               router.replace('/(app)/questionnaire');
@@ -34,7 +44,6 @@ export default function VerifyOTPScreen() {
           }
         ]
       );
-      
     } catch (error: any) {
       Alert.alert('Verification Failed', error.message || 'Invalid OTP');
     } finally {
@@ -55,95 +64,93 @@ export default function VerifyOTPScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Verify OTP</Text>
-      <Text style={styles.subtitle}>Enter the OTP sent to <Text style={styles.email}>{email}</Text></Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Enter OTP"
-        value={otp}
-        onChangeText={setOtp}
-        keyboardType="number-pad"
-        maxLength={6}
-        textAlign="center"
-      />
-      
-      <TouchableOpacity 
-        style={[styles.button, loading && styles.buttonDisabled]} 
-        onPress={handleVerify}
-        disabled={loading}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify OTP</Text>}
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        onPress={handleResend}
-        disabled={resendLoading}
-      >
-        <Text style={styles.link}>
-          {resendLoading ? 'Sending...' : 'Resend OTP'}
+        <Text style={styles.title}>Verify OTP</Text>
+        <Text style={styles.subtitle}>
+          Enter the OTP sent to <Text style={styles.email}>{email}</Text>
         </Text>
-      </TouchableOpacity>
-    </View>
+
+        <AppInput
+          placeholder="Enter OTP"
+          value={otp}
+          onChangeText={setOtp}
+          keyboardType="number-pad"
+          maxLength={6}
+          textAlign="center"
+          containerStyle={styles.inputContainer}
+            // inputStyle should be TextStyle; cast to any to avoid TypeScript error
+            inputStyle={styles.otpInput as any}
+        />
+
+        <PrimaryButton
+          title="Verify OTP"
+          onPress={handleVerify}
+          loading={loading}
+          style={styles.button}
+        />
+
+        <TouchableOpacity
+          onPress={handleResend}
+          disabled={resendLoading}
+        >
+          <Text style={styles.link}>
+            {resendLoading ? 'Sending...' : 'Resend OTP'}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    padding: 20,
-    backgroundColor: '#F4F7FC',
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
   },
-  title: { 
-    fontSize: 28, 
-    fontWeight: 'bold', 
-    marginBottom: 10, 
-    textAlign: 'center',
-    color: '#1a1a1a',
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    padding: Spacing.xl,
   },
-  subtitle: { 
-    fontSize: 16, 
-    color: '#666', 
-    marginBottom: 30, 
-    textAlign: 'center',
+  title: {
+    ...Typography.h1,
+    color: Colors.text,
+    textAlign: "center",
+    marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginBottom: Spacing.xl,
   },
   email: {
-    color: '#007AFF',
+    color: Colors.primary,
     fontWeight: '600',
   },
-  input: { 
-    borderWidth: 1, 
-    borderColor: '#ddd', 
-    padding: 15, 
-    marginBottom: 15, 
-    borderRadius: 8, 
-    textAlign: 'center', 
+  inputContainer: {
+    marginBottom: Spacing.md,
+  },
+  otpInput: {
+    textAlign: 'center',
     fontSize: 20,
-    backgroundColor: '#fff',
     letterSpacing: 8,
   },
-  button: { 
-    backgroundColor: '#007AFF', 
-    padding: 15, 
-    borderRadius: 8, 
-    alignItems: 'center',
-    marginTop: 10,
+  button: {
+    marginTop: Spacing.sm,
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: { 
-    color: '#fff', 
-    fontWeight: 'bold', 
-    fontSize: 16,
-  },
-  link: { 
-    color: '#007AFF', 
-    textAlign: 'center', 
-    marginTop: 20,
-    fontSize: 16,
-    fontWeight: '500',
+  link: {
+    ...Typography.bodySmall,
+    color: Colors.primary,
+    textAlign: "center",
+    marginTop: Spacing.lg,
+    fontWeight: "600",
   },
 });

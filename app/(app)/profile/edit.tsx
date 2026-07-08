@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   Modal,
   FlatList,
   Platform,
@@ -14,12 +13,11 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../../service/auth";
-import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { AppInput } from "../../../components/common/AppInput";
 import { PrimaryButton } from "../../../components/common/PrimaryButton";
 import { Colors, Spacing, Typography, BorderRadius } from "../../../constants/theme";
 
-// Define types for picker items
 interface PickerItem {
   label: string;
   value: string;
@@ -28,39 +26,18 @@ interface PickerItem {
 export default function EditProfileScreen() {
   const { user, updateProfile } = useAuth();
 
-  const [firstName, setFirstName] = useState(
-    user?.first_name || ""
-  );
-
-  const [lastName, setLastName] = useState(
-    user?.last_name || ""
-  );
-
-  const [username, setUsername] = useState(
-    user?.username || ""
-  );
-
-  const [dateOfBirth, setDateOfBirth] = useState(
-    user?.profile?.date_of_birth || ""
-  );
-  const [gender, setGender] = useState(
-    user?.profile?.gender || ""
-  );
-  const [bloodGroup, setBloodGroup] = useState(
-    user?.profile?.blood_group || ""
-  );
-  const [heightCm, setHeightCm] = useState(
-    user?.profile?.height_cm?.toString() || ""
-  );
-  const [weightKg, setWeightKg] = useState(
-    user?.profile?.weight_kg?.toString() || ""
-  );
+  const [firstName, setFirstName] = useState(user?.first_name || "");
+  const [lastName, setLastName] = useState(user?.last_name || "");
+  const [username, setUsername] = useState(user?.username || "");
+  const [dateOfBirth, setDateOfBirth] = useState(user?.profile?.date_of_birth || "");
+  const [gender, setGender] = useState(user?.profile?.gender || "");
+  const [bloodGroup, setBloodGroup] = useState(user?.profile?.blood_group || "");
+  const [heightCm, setHeightCm] = useState(user?.profile?.height_cm?.toString() || "");
+  const [weightKg, setWeightKg] = useState(user?.profile?.weight_kg?.toString() || "");
   const [phoneNumber, setPhoneNumber] = useState(
     user?.phone_number || user?.profile?.phone_number || ""
   );
-  const [unitSystem, setUnitSystem] = useState(
-    user?.profile?.unit_system || "metric"
-  );
+  const [unitSystem, setUnitSystem] = useState(user?.profile?.unit_system || "metric");
 
   const [loading, setLoading] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
@@ -68,11 +45,12 @@ export default function EditProfileScreen() {
   const [showUnitModal, setShowUnitModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // ✅ Correct gender values (capitalized)
   const GENDERS: PickerItem[] = [
-  { label: "Male", value: "Male" },
-  { label: "Female", value: "Female" },
-  { label: "Other", value: "Other" },
-];
+    { label: "Male", value: "Male" },
+    { label: "Female", value: "Female" },
+    { label: "Other", value: "Other" },
+  ];
 
   const BLOOD_GROUPS: PickerItem[] = [
     { label: "A+", value: "A+" },
@@ -98,7 +76,6 @@ export default function EditProfileScreen() {
 
     try {
       setLoading(true);
-
       await updateProfile({
         first_name: firstName,
         last_name: lastName,
@@ -111,21 +88,16 @@ export default function EditProfileScreen() {
         phone_number: phoneNumber || null,
         unit_system: unitSystem || null,
       });
-
       Alert.alert("Success", "Profile updated successfully");
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert(
-        "Update Failed",
-        error?.response?.data?.message || "Something went wrong"
-      );
+      Alert.alert("Update Failed", error?.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
-  // Generic modal picker component with dark theme
   const ModalPicker = ({
     visible,
     onClose,
@@ -140,47 +112,46 @@ export default function EditProfileScreen() {
     selectedValue: string;
     onSelect: (value: string) => void;
     title: string;
-  }) => {
-    return (
-      <Modal visible={visible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{title}</Text>
-            <FlatList
-              data={data}
-              keyExtractor={(item) => item.value}
-     renderItem={({ item }) => {
-  const isSelected = selectedValue === item.value;
-  return (
-    <TouchableOpacity
-      style={[styles.modalItem, isSelected ? styles.modalItemSelected : undefined]}
-      onPress={() => {
-        onSelect(item.value);
-        onClose();
-      }}
-    >
-      <Text style={[styles.modalItemText, isSelected ? styles.modalItemTextSelected : undefined]}>
-        {item.label}
-      </Text>
-      {isSelected && <Text style={styles.checkmark}>✓</Text>}
-    </TouchableOpacity>
-  );
-}}
-            />
-            <TouchableOpacity onPress={onClose} style={styles.modalClose}>
-              <Text style={styles.modalCloseText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
+  }) => (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.value}
+            renderItem={({ item }) => {
+              const isSelected = selectedValue === item.value;
+              return (
+                <TouchableOpacity
+                  style={[styles.modalItem, isSelected ? styles.modalItemSelected : undefined]}
+                  onPress={() => {
+                    onSelect(item.value);
+                    onClose();
+                  }}
+                >
+                  <Text
+                    style={[styles.modalItemText, isSelected ? styles.modalItemTextSelected : undefined]}
+                  >
+                    {item.label}
+                  </Text>
+                  {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                </TouchableOpacity>
+              );
+            }}
+          />
+          <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+            <Text style={styles.modalCloseText}>Cancel</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
-    );
-  };
+      </View>
+    </Modal>
+  );
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Edit Profile</Text>
 
-      {/* Personal Information Section */}
       <Text style={styles.sectionTitle}>Personal Information</Text>
 
       <AppInput
@@ -189,14 +160,12 @@ export default function EditProfileScreen() {
         onChangeText={setFirstName}
         containerStyle={styles.inputContainer}
       />
-
       <AppInput
         placeholder="Last Name *"
         value={lastName}
         onChangeText={setLastName}
         containerStyle={styles.inputContainer}
       />
-
       <AppInput
         placeholder="Username *"
         value={username}
@@ -204,7 +173,6 @@ export default function EditProfileScreen() {
         autoCapitalize="none"
         containerStyle={styles.inputContainer}
       />
-
       <AppInput
         placeholder="Phone Number"
         value={phoneNumber}
@@ -214,24 +182,26 @@ export default function EditProfileScreen() {
       />
 
       {/* Date of Birth */}
-      <Pressable onPress={() => {
-        if (Platform.OS === 'android') {
-          const current = dateOfBirth ? new Date(dateOfBirth) : new Date();
-          DateTimePickerAndroid.open({
-            value: current,
-            onChange: (event, selectedDate) => {
-              if (!selectedDate) return;
-              const yyyy = selectedDate.getFullYear();
-              const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
-              const dd = String(selectedDate.getDate()).padStart(2, '0');
-              setDateOfBirth(`${yyyy}-${mm}-${dd}`);
-            },
-            mode: 'date',
-          });
-          return;
-        }
-        setShowDatePicker(true);
-      }}>
+      <Pressable
+        onPress={() => {
+          if (Platform.OS === "android") {
+            const current = dateOfBirth ? new Date(dateOfBirth) : new Date();
+            DateTimePickerAndroid.open({
+              value: current,
+              onChange: (event, selectedDate) => {
+                if (!selectedDate) return;
+                const yyyy = selectedDate.getFullYear();
+                const mm = String(selectedDate.getMonth() + 1).padStart(2, "0");
+                const dd = String(selectedDate.getDate()).padStart(2, "0");
+                setDateOfBirth(`${yyyy}-${mm}-${dd}`);
+              },
+              mode: "date",
+            });
+            return;
+          }
+          setShowDatePicker(true);
+        }}
+      >
         <View pointerEvents="none">
           <AppInput
             placeholder="Date of Birth"
@@ -242,17 +212,17 @@ export default function EditProfileScreen() {
         </View>
       </Pressable>
 
-      {showDatePicker && Platform.OS !== 'android' && (
+      {showDatePicker && Platform.OS !== "android" && (
         <DateTimePicker
           value={dateOfBirth ? new Date(dateOfBirth) : new Date()}
           mode="date"
           display="spinner"
           onChange={(event, selectedDate) => {
-            setShowDatePicker(Platform.OS === 'ios');
+            setShowDatePicker(Platform.OS === "ios");
             if (selectedDate) {
               const yyyy = selectedDate.getFullYear();
-              const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
-              const dd = String(selectedDate.getDate()).padStart(2, '0');
+              const mm = String(selectedDate.getMonth() + 1).padStart(2, "0");
+              const dd = String(selectedDate.getDate()).padStart(2, "0");
               setDateOfBirth(`${yyyy}-${mm}-${dd}`);
             }
           }}
@@ -264,7 +234,7 @@ export default function EditProfileScreen() {
         <View pointerEvents="none">
           <AppInput
             placeholder="Gender"
-            value={GENDERS.find(g => g.value === gender)?.label || ""}
+            value={GENDERS.find((g) => g.value === gender)?.label || ""}
             editable={false}
             containerStyle={styles.pressableInputContainer}
           />
@@ -276,54 +246,45 @@ export default function EditProfileScreen() {
         <View pointerEvents="none">
           <AppInput
             placeholder="Blood Group"
-            value={BLOOD_GROUPS.find(b => b.value === bloodGroup)?.label || ""}
+            value={BLOOD_GROUPS.find((b) => b.value === bloodGroup)?.label || ""}
             editable={false}
             containerStyle={styles.pressableInputContainer}
           />
         </View>
       </Pressable>
 
-      {/* Body Measurements Section */}
       <Text style={styles.sectionTitle}>Body Measurements</Text>
 
       <AppInput
-        placeholder={`Height (${unitSystem === 'metric' ? 'cm' : 'ft/in'})`}
+        placeholder={`Height (${unitSystem === "metric" ? "cm" : "ft/in"})`}
         value={heightCm}
         onChangeText={setHeightCm}
         keyboardType="numeric"
         containerStyle={styles.inputContainer}
       />
-
       <AppInput
-        placeholder={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`}
+        placeholder={`Weight (${unitSystem === "metric" ? "kg" : "lbs"})`}
         value={weightKg}
         onChangeText={setWeightKg}
         keyboardType="numeric"
         containerStyle={styles.inputContainer}
       />
 
-      {/* Unit System */}
       <Text style={styles.subLabel}>Unit System</Text>
       <Pressable onPress={() => setShowUnitModal(true)}>
         <View pointerEvents="none">
           <AppInput
             placeholder="Unit System"
-            value={UNIT_SYSTEMS.find(u => u.value === unitSystem)?.label || "Metric"}
+            value={UNIT_SYSTEMS.find((u) => u.value === unitSystem)?.label || "Metric"}
             editable={false}
             containerStyle={styles.pressableInputContainer}
           />
         </View>
       </Pressable>
 
-      {/* Email (Read-only) */}
       <Text style={styles.sectionTitle}>Account Information</Text>
-      <AppInput
-        value={user?.email || ""}
-        editable={false}
-        containerStyle={styles.disabledInputContainer}
-      />
+      <AppInput value={user?.email || ""} editable={false} containerStyle={styles.disabledInputContainer} />
 
-      {/* Modals */}
       <ModalPicker
         visible={showGenderModal}
         onClose={() => setShowGenderModal(false)}
@@ -332,7 +293,6 @@ export default function EditProfileScreen() {
         onSelect={setGender}
         title="Select Gender"
       />
-
       <ModalPicker
         visible={showBloodModal}
         onClose={() => setShowBloodModal(false)}
@@ -341,7 +301,6 @@ export default function EditProfileScreen() {
         onSelect={setBloodGroup}
         title="Select Blood Group"
       />
-
       <ModalPicker
         visible={showUnitModal}
         onClose={() => setShowUnitModal(false)}
@@ -351,107 +310,46 @@ export default function EditProfileScreen() {
         title="Select Unit System"
       />
 
-      <PrimaryButton
-        title="Update Profile"
-        onPress={handleUpdate}
-        loading={loading}
-        style={styles.updateButton}
-      />
+      <PrimaryButton title="Update Profile" onPress={handleUpdate} loading={loading} style={styles.updateButton} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: Spacing.lg,
-    backgroundColor: Colors.background,
-  },
-  title: {
-    ...Typography.h1,
-    color: Colors.text,
-    marginBottom: Spacing.lg,
-    marginTop: Spacing.sm,
-  },
-  sectionTitle: {
-    ...Typography.h4,
-    color: Colors.text,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  subLabel: {
-    ...Typography.bodySmall,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-  inputContainer: {
-    marginBottom: Spacing.sm,
-  },
-  pressableInputContainer: {
-    marginBottom: Spacing.sm,
-    opacity: 0.8,
-  },
-  disabledInputContainer: {
-    marginBottom: Spacing.sm,
-    opacity: 0.6,
-  },
-  updateButton: {
-    marginTop: Spacing.md,
-    marginBottom: 30,
-  },
+  container: { flex: 1, padding: Spacing.lg, backgroundColor: Colors.background },
+  title: { ...Typography.h1, color: Colors.text, marginBottom: Spacing.lg, marginTop: Spacing.sm },
+  sectionTitle: { ...Typography.h4, color: Colors.text, marginTop: Spacing.md, marginBottom: Spacing.sm },
+  subLabel: { ...Typography.bodySmall, color: Colors.textSecondary, marginBottom: Spacing.xs },
+  inputContainer: { marginBottom: Spacing.sm },
+  pressableInputContainer: { marginBottom: Spacing.sm, opacity: 0.8 },
+  disabledInputContainer: { marginBottom: Spacing.sm, opacity: 0.6 },
+  updateButton: { marginTop: Spacing.md, marginBottom: 30 },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    width: '85%',
-    maxHeight: '70%',
+    width: "85%",
+    maxHeight: "70%",
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
   },
-  modalTitle: {
-    ...Typography.h4,
-    color: Colors.text,
-    textAlign: 'center',
-    marginBottom: Spacing.md,
-  },
+  modalTitle: { ...Typography.h4, color: Colors.text, textAlign: "center", marginBottom: Spacing.md },
   modalItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  modalItemSelected: {
-    backgroundColor: Colors.primary + '20',
-  },
-  modalItemText: {
-    ...Typography.body,
-    color: Colors.text,
-  },
-  modalItemTextSelected: {
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  modalClose: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  modalCloseText: {
-    ...Typography.body,
-    color: Colors.error,
-    fontWeight: '600',
-  },
-  checkmark: {
-    fontSize: 18,
-    color: Colors.primary,
-    fontWeight: 'bold',
-  },
+  modalItemSelected: { backgroundColor: Colors.primary + "20" },
+  modalItemText: { ...Typography.body, color: Colors.text },
+  modalItemTextSelected: { color: Colors.primary, fontWeight: "600" },
+  modalClose: { marginTop: Spacing.md, paddingVertical: Spacing.md, alignItems: "center" },
+  modalCloseText: { ...Typography.body, color: Colors.error, fontWeight: "600" },
+  checkmark: { fontSize: 18, color: Colors.primary, fontWeight: "bold" },
 });

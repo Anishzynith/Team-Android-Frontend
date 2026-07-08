@@ -24,8 +24,7 @@ interface User {
     weight_kg?: number | null;
     phone_number?: string;
     unit_system?: string;
-    profile_picture?: string;
-  avatar?: string; // for Google
+    profile_picture?: string; // ✅ unified field
   };
 }
 
@@ -59,36 +58,14 @@ interface ProfileData {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-
-  login: (
-    identifier: string,
-    password: string
-  ) => Promise<void>;
-
-  signup: (
-    data: SignupData
-  ) => Promise<any>;
-
-  verifyOtp: (
-    email: string,
-    otpcode: string
-  ) => Promise<void>;
-
-  resendOtp: (
-    email: string,
-    purpose: string
-  ) => Promise<void>;
-
+  login: (identifier: string, password: string) => Promise<void>;
+  signup: (data: SignupData) => Promise<any>;
+  verifyOtp: (email: string, otpcode: string) => Promise<void>;
+  resendOtp: (email: string, purpose: string) => Promise<void>;
   logout: () => Promise<void>;
-
-  updateProfile: (
-    data: ProfileData
-  ) => Promise<void>;
-
+  updateProfile: (data: ProfileData) => Promise<void>;
   refreshProfile: () => Promise<void>;
-
   googleLogin: () => Promise<{ requiresSignup: boolean }>;
-
   googleSignupData: {
     email: string;
     first_name: string;
@@ -103,11 +80,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [googleSignupData, setGoogleSignupData] = useState<{
@@ -123,7 +96,6 @@ export function AuthProvider({
   const initializeAuth = async () => {
     try {
       const token = await SecureStore.getItemAsync("access_token");
-
       if (token) {
         const response = await authAPI.getProfile();
         setUser(response.data.data);
@@ -137,14 +109,9 @@ export function AuthProvider({
     }
   };
 
-  const validateToken = (
-    value: unknown,
-    name: string
-  ): string => {
+  const validateToken = (value: unknown, name: string): string => {
     if (typeof value !== "string" || !value.trim()) {
-      throw new Error(
-        `Invalid ${name} received from authentication response.`
-      );
+      throw new Error(`Invalid ${name} received from authentication response.`);
     }
     return value;
   };
@@ -167,14 +134,8 @@ export function AuthProvider({
   };
 
   const login = async (identifier: string, password: string) => {
-    const response = await authAPI.login({
-      identifier,
-      password,
-    });
-
-    const { accessToken, refreshToken, user: loggedInUser } =
-      resolveAuthPayload(response);
-
+    const response = await authAPI.login({ identifier, password });
+    const { accessToken, refreshToken, user: loggedInUser } = resolveAuthPayload(response);
     await storeTokens(accessToken, refreshToken);
     setUser(loggedInUser);
   };
@@ -185,23 +146,14 @@ export function AuthProvider({
   };
 
   const verifyOtp = async (email: string, otpcode: string) => {
-    const response = await authAPI.verifyOtp({
-      email,
-      otp_code: otpcode,
-    });
-
-    const { accessToken, refreshToken, user: verifiedUser } =
-      resolveAuthPayload(response);
-
+    const response = await authAPI.verifyOtp({ email, otp_code: otpcode });
+    const { accessToken, refreshToken, user: verifiedUser } = resolveAuthPayload(response);
     await storeTokens(accessToken, refreshToken);
     setUser(verifiedUser);
   };
 
   const resendOtp = async (email: string, purpose: string) => {
-    await authAPI.resendOtp({
-      email,
-      purpose,
-    });
+    await authAPI.resendOtp({ email, purpose });
   };
 
   const refreshProfile = async () => {
@@ -217,9 +169,7 @@ export function AuthProvider({
   const logout = async () => {
     try {
       const refreshToken = await SecureStore.getItemAsync("refresh_token");
-      await authAPI.logout({
-        refresh: refreshToken || "",
-      });
+      await authAPI.logout({ refresh: refreshToken || "" });
     } catch (error) {
       console.log("Logout Error:", error);
     } finally {
@@ -232,18 +182,17 @@ export function AuthProvider({
 
   const googleLogin = async (): Promise<{ requiresSignup: boolean }> => {
     try {
-      console.log('Starting Google Login flow...');
+      console.log("Starting Google Login flow...");
       setIsLoading(true);
 
       if (!googleAuthService.isConfigured()) {
         throw new Error(
-          'Google Sign-In is not configured. Please check your Google Client ID.'
+          "Google Sign-In is not configured. Please check your Google Client ID."
         );
       }
 
       const result = await googleAuthService.signInWithGoogle();
-
-      console.log('Google Sign-In successful:', result.user.email);
+      console.log("Google Sign-In successful:", result.user.email);
 
       const response = await authAPI.googleLogin({
         id_token: result.idToken,
@@ -251,37 +200,43 @@ export function AuthProvider({
         email: result.user.email,
       });
 
-      console.log('Google Login Response:', response.data);
+      console.log("Google Login Response:", response.data);
 
       if (response.data?.requires_signup) {
-        console.log('New user - needs to complete signup');
-
+        console.log("New user - needs to complete signup");
         setGoogleSignupData({
           email: result.user.email,
-          first_name: result.user.given_name || '',
-          last_name: result.user.family_name || '',
+          first_name: result.user.given_name || "",
+          last_name: result.user.family_name || "",
         });
-
         setIsLoading(false);
         return { requiresSignup: true };
       }
 
       if (response.data?.data?.tokens) {
         const { access, refresh } = response.data.data.tokens;
-        const userData = response.data.data.user;
+        let userData = response.data.data.user;
 
-        await SecureStore.setItemAsync('access_token', access);
-        await SecureStore.setItemAsync('refresh_token', refresh);
+        // ✅ Store Google profile picture if missing
+        if (!userData.profile?.profile_picture && result.user.picture) {
+          userData = {
+            ...userData,
+            profile: {
+              ...(userData.profile || {}),
+              profile_picture: result.user.picture, // ✅ 'picture' from Google
+            },
+          };
+        }
 
+        await storeTokens(access, refresh);
         setUser(userData);
         setIsLoading(false);
-
         return { requiresSignup: false };
       }
 
-      throw new Error('Invalid response from Google Login API');
+      throw new Error("Invalid response from Google Login API");
     } catch (error: any) {
-      console.error('Google Login Error:', error);
+      console.error("Google Login Error:", error);
       setIsLoading(false);
       throw error;
     }
@@ -311,12 +266,8 @@ export function AuthProvider({
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-
   if (!context) {
-    throw new Error(
-      "useAuth must be used inside AuthProvider"
-    );
+    throw new Error("useAuth must be used inside AuthProvider");
   }
-
   return context;
 };

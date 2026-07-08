@@ -1,15 +1,21 @@
+// app/(auth)/forgot-password.tsx
 import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { router } from "expo-router";
 import { authAPI } from "../../service/api";
+import { AppInput } from "../../components/common/AppInput";
+import { PrimaryButton } from "../../components/common/PrimaryButton";
+import { Colors, Spacing, Typography } from "../../constants/theme";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -17,41 +23,28 @@ export default function ForgotPasswordScreen() {
 
   const handleSubmit = async () => {
     if (!email.trim()) {
-      Alert.alert(
-        "Validation Error",
-        "Please enter your email"
-      );
+      Alert.alert("Validation Error", "Please enter your email");
+      return;
+    }
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert("Validation Error", "Please enter a valid email address.");
       return;
     }
 
     try {
       setLoading(true);
-
-      await authAPI.passwordResetRequest({
-        email,
-      });
-
-      Alert.alert(
-        "Success",
-        "Password reset OTP has been sent to your email."
-      );
-
+      await authAPI.passwordResetRequest({ email });
+      Alert.alert("Success", "Password reset OTP has been sent to your email.");
       router.push({
         pathname: "/(auth)/reset-password",
-        params: {
-          email,
-        },
+        params: { email },
       });
     } catch (error: any) {
-      console.log(
-        "Password Reset Error:",
-        error?.response?.data
-      );
-
+      console.log("Password Reset Error:", error?.response?.data);
       Alert.alert(
         "Error",
-        error?.response?.data?.message ||
-          "Failed to send OTP"
+        error?.response?.data?.message || "Failed to send OTP"
       );
     } finally {
       setLoading(false);
@@ -59,108 +52,65 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Forgot Password
-      </Text>
-
-      <Text style={styles.subtitle}>
-        Enter your registered email
-        address to receive an OTP.
-      </Text>
-
-      <TextInput
-        placeholder="Email Address"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-
-      <TouchableOpacity
-        style={[
-          styles.button,
-          loading && styles.disabledButton,
-        ]}
-        onPress={handleSubmit}
-        disabled={loading}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>
-            Send OTP
-          </Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() =>
-          router.replace("/(auth)/login")
-        }
-      >
-        <Text style={styles.backText}>
-          Back to Login
+        <Text style={styles.title}>Forgot Password</Text>
+        <Text style={styles.subtitle}>
+          Enter your registered email address to receive an OTP.
         </Text>
-      </TouchableOpacity>
-    </View>
+
+        <AppInput
+          placeholder="Email Address"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          containerStyle={styles.inputContainer}
+        />
+
+        <PrimaryButton
+          title="Send OTP"
+          onPress={handleSubmit}
+          loading={loading}
+          style={styles.button}
+        />
+
+        <TouchableOpacity onPress={() => router.replace("/(auth)/login")}>
+          <Text style={styles.backText}>Back to Login</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1, backgroundColor: Colors.background },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#F5F5F5",
+    padding: Spacing.xl,
   },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-
+  title: { ...Typography.h1, color: Colors.text, textAlign: "center", marginBottom: Spacing.xs },
   subtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
     textAlign: "center",
-    color: "#666",
-    marginBottom: 25,
-    fontSize: 15,
+    marginBottom: Spacing.xl,
   },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-
-  button: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 8,
-  },
-
-  disabledButton: {
-    opacity: 0.7,
-  },
-
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-
+  inputContainer: { marginBottom: Spacing.md },
+  button: { marginTop: Spacing.sm },
   backText: {
+    ...Typography.bodySmall,
+    color: Colors.primary,
     textAlign: "center",
-    color: "#007AFF",
-    marginTop: 20,
+    marginTop: Spacing.lg,
     fontWeight: "600",
   },
 });
